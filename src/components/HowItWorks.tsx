@@ -26,7 +26,7 @@ const steps = [
 
 const HowItWorks: React.FC = () => {
   return (
-    <section id="como-funciona\" className=\"py-16 bg-gradient-to-b from-slate-50 to-white">
+    <section id="como-funciona" className=\"py-16 bg-gradient-to-b from-slate-50 to-white">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center mb-16 animate-fadeIn">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
@@ -61,12 +61,12 @@ const HowItWorks: React.FC = () => {
           ))}
         </div>
         
-        <div className="mt-16 text-center">
+        <Link to="/upload" className="mt-16 text-center block">
           <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-all shadow-md hover:shadow-lg inline-flex items-center gap-2">
             <FileUp className="h-5 w-5" />
             Carregar Multa Agora
           </button>
-        </div>
+        </Link>
       </div>
     </section>
   );
