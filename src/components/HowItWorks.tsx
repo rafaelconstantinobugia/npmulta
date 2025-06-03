@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileUp, FileText, Send, ThumbsUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const steps = [
   {
@@ -26,7 +27,7 @@ const steps = [
 
 const HowItWorks: React.FC = () => {
   return (
-    <section id="como-funciona" className=\"py-16 bg-gradient-to-b from-slate-50 to-white">
+    <section id="como-funciona" className="py-16 bg-gradient-to-b from-slate-50 to-white">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center mb-16 animate-fadeIn">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
