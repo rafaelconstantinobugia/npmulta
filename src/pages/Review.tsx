@@ -4,6 +4,7 @@ import { ArrowLeft, FileText, CheckCircle, Send, Download, Eye } from 'lucide-re
 import Button from '../components/ui/Button';
 import { DadosMulta } from '../types/multa';
 import { generateLetter } from '../utils/generateLetter';
+import ProgressBar from '../components/ProgressBar';
 
 const Review: React.FC = () => {
   const location = useLocation();
@@ -58,6 +59,8 @@ const Review: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 pt-24 pb-16">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
+          <ProgressBar currentStep={pdfUrl ? 3 : 2} />
+          
           <div className="flex items-center mb-6">
             <Link to="/upload" className="flex items-center text-blue-600 hover:text-blue-800">
               <ArrowLeft className="w-5 h-5 mr-1" />

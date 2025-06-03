@@ -4,6 +4,7 @@ import Button from '../components/ui/Button';
 import { fakeOcr } from '../utils/fakeOcr';
 import { DadosMulta } from '../types/multa';
 import { useNavigate } from 'react-router-dom';
+import ProgressBar from '../components/ProgressBar';
 
 const Upload: React.FC = () => {
   const navigate = useNavigate();
@@ -83,6 +84,8 @@ const Upload: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 pt-24 pb-16">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
+          <ProgressBar currentStep={1} />
+          
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 text-center mb-8">
             Carregue a sua multa
           </h1>
