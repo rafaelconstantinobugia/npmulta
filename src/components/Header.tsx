@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const scrollToSection = (sectionId: string) => {
+    setMobileMenuOpen(false);
+    if (location.pathname !== '/') {
+      window.location.href = `/#${sectionId}`;
+      return;
+    }
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,10 +42,10 @@ const Header: React.FC = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          <a href="#como-funciona" className="text-slate-700 hover:text-blue-600 transition-colors">Como Funciona</a>
-          <a href="#vantagens" className="text-slate-700 hover:text-blue-600 transition-colors">Vantagens</a>
-          <a href="#testemunhos" className="text-slate-700 hover:text-blue-600 transition-colors">Testemunhos</a>
-          <a href="#faq" className="text-slate-700 hover:text-blue-600 transition-colors">FAQ</a>
+          <button onClick={() => scrollToSection('como-funciona')} className="text-slate-700 hover:text-blue-600 transition-colors">Como Funciona</button>
+          <button onClick={() => scrollToSection('vantagens')} className="text-slate-700 hover:text-blue-600 transition-colors">Vantagens</button>
+          <button onClick={() => scrollToSection('testemunhos')} className="text-slate-700 hover:text-blue-600 transition-colors">Testemunhos</button>
+          <button onClick={() => scrollToSection('faq')} className="text-slate-700 hover:text-blue-600 transition-colors">FAQ</button>
           <Link 
             to="/upload"
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg transition-all shadow-md hover:shadow-lg"
@@ -54,34 +67,30 @@ const Header: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden bg-white absolute w-full py-4 shadow-md animate-fadeIn">
           <div className="container mx-auto px-4 flex flex-col gap-4">
-            <a 
-              href="#como-funciona" 
+            <button 
+              onClick={() => scrollToSection('como-funciona')}
               className="text-slate-700 hover:text-blue-600 transition-colors py-2 border-b border-slate-100"
-              onClick={() => setMobileMenuOpen(false)}
             >
               Como Funciona
-            </a>
-            <a 
-              href="#vantagens" 
+            </button>
+            <button 
+              onClick={() => scrollToSection('vantagens')}
               className="text-slate-700 hover:text-blue-600 transition-colors py-2 border-b border-slate-100"
-              onClick={() => setMobileMenuOpen(false)}
             >
               Vantagens
-            </a>
-            <a 
-              href="#testemunhos" 
+            </button>
+            <button 
+              onClick={() => scrollToSection('testemunhos')}
               className="text-slate-700 hover:text-blue-600 transition-colors py-2 border-b border-slate-100"
-              onClick={() => setMobileMenuOpen(false)}
             >
               Testemunhos
-            </a>
-            <a 
-              href="#faq" 
+            </button>
+            <button 
+              onClick={() => scrollToSection('faq')}
               className="text-slate-700 hover:text-blue-600 transition-colors py-2 border-b border-slate-100"
-              onClick={() => setMobileMenuOpen(false)}
             >
               FAQ
-            </a>
+            </button>
             <Link
               to="/upload"
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-3 rounded-lg transition-all shadow-md hover:shadow-lg w-full mt-2"
