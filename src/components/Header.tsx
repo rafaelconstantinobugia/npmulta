@@ -10,7 +10,7 @@ const Header: React.FC = () => {
   const scrollToSection = (sectionId: string) => {
     setMobileMenuOpen(false);
     if (location.pathname !== '/') {
-      window.location.href = `/#${sectionId}`;
+      window.location.href = `/${sectionId}`;
       return;
     }
     const element = document.getElementById(sectionId);
@@ -35,7 +35,11 @@ const Header: React.FC = () => {
       }`}
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8 flex justify-between items-center">
-        <Link to="/" className="flex items-center gap-2 text-blue-600 font-bold text-lg md:text-xl">
+        <Link 
+          to="/" 
+          className="flex items-center gap-2 text-blue-600 font-bold text-lg md:text-xl"
+          onClick={() => window.scrollTo(0, 0)}
+        >
           <Shield className="h-6 w-6" />
           <span>Não Pagues a Multa</span>
         </Link>
@@ -106,3 +110,5 @@ const Header: React.FC = () => {
 };
 
 export default Header;
+
+export default Header
