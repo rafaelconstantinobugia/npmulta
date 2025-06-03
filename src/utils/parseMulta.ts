@@ -26,7 +26,7 @@ const patterns = [
 for (const pattern of patterns) {
 const match = text.match(pattern);
 if (match) {
-return \`\${match[1]}-\${match[2]}-\${match[3]}\`.toUpperCase();
+return `${match[1]}-${match[2]}-${match[3]}`.toUpperCase();
 }
 }
 return undefined;
@@ -42,9 +42,9 @@ if (match) {
 let [_, d1, d2, d3] = match;
 if (d3.length === 2) {
 const year = parseInt(d3) < 50 ? '20' + d3 : '19' + d3;
-return \`\${d1.padStart(2, '0')}-\${d2.padStart(2, '0')}-\${year}\`;
+return `${d1.padStart(2, '0')}-${d2.padStart(2, '0')}-${year}`;
 }
-return \`\${d1.padStart(2, '0')}-\${d2.padStart(2, '0')}-\${d3}\`;
+return `${d1.padStart(2, '0')}-${d2.padStart(2, '0')}-${d3}`;
 }
 }
 const monthRegex = /\b(\d{1,2})\s+(?:de\s+)?([a-zçãé]+)(?:\s+de)?\s+(\d{2,4})\b/i;
@@ -52,7 +52,7 @@ const match = text.match(monthRegex);
 if (match) {
 let [_, day, month, year] = match;
 if (year.length === 2) year = parseInt(year) < 50 ? '20' + year : '19' + year;
-return \`\${day.padStart(2, '0')}-\${MONTH_MAP[month.toLowerCase()] || '01'}-\${year}\`;
+return `${day.padStart(2, '0')}-${MONTH_MAP[month.toLowerCase()] || '01'}-${year}`;
 }
 return undefined;
 }
@@ -65,14 +65,14 @@ for (const regex of regexes) {
 const match = text.match(regex);
 if (match) {
 const [_, h, m] = match;
-return \`\${h.padStart(2, '0')}:\${m.padStart(2, '0')}\`;
+return `${h.padStart(2, '0')}:${m.padStart(2, '0')}`;
 }
 }
 return undefined;
+}
 function extractLocation(text: string): string | undefined {
 const match = text.match(/(?:local|em|na|no)[:\s]+([\w\s,\.À-ÿ-]{4,30})/i);
 return match ? match[1].trim() : undefined;
-}
 }
 function extractInfraction(text: string): string | undefined {
 const keywords: { [key: string]: string } = {
