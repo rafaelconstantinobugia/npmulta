@@ -1,10 +1,5 @@
 import React from 'react';
-import Clock from 'lucide-react/dist/esm/icons/clock';
-import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
-import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
-import Ban from 'lucide-react/dist/esm/icons/ban';
-import Scale from 'lucide-react/dist/esm/icons/scale';
-import Award from 'lucide-react/dist/esm/icons/award';
+import { Clock, ShieldCheck, Sparkles, Ban, Scale, Award } from 'lucide-react';
 
 const features = [
   {
