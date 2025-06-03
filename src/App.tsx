@@ -8,6 +8,7 @@ import Testimonials from './components/Testimonials';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import Upload from './pages/Upload';
+import Review from './pages/Review';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             </main>
           } />
           <Route path="/upload" element={<Upload />} />
+          <Route path="/review" element={<Review />} />
         </Routes>
         <Footer />
       </div>

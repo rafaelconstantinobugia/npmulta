@@ -3,13 +3,15 @@ import { FileUp, CheckCircle, AlertCircle } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { fakeOcr } from '../utils/fakeOcr';
 import { DadosMulta } from '../types/multa';
+import { useNavigate } from 'react-router-dom';
 
 const Upload: React.FC = () => {
+  const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [dadosMulta, setDadosMulta] = useState<DadosMulta | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
 
@@ -48,10 +50,17 @@ const Upload: React.FC = () => {
 
   const processFile = async (file: File) => {
     try {
+      setLoading(true);
       const dados = await fakeOcr(file);
-      setDadosMulta(dados);
       setSuccess(true);
+      setLoading(false);
+      
+      // Short delay for better UX, showing the success state before navigating
+      setTimeout(() => {
+        navigate('/review', { state: dados });
+      }, 1500);
     } catch (error) {
+      setLoading(false);
       setError('Erro ao processar o ficheiro. Por favor, tente novamente.');
     }
   };
@@ -90,7 +99,12 @@ const Upload: React.FC = () => {
             tabIndex={0}
             aria-label="Área para carregar ficheiro"
           >
-            {!success ? (
+            {loading ? (
+              <div className="text-center py-6">
+                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-lg text-slate-700">A processar o documento...</p>
+              </div>
+            ) : !success ? (
               <>
                 <div className="mb-4">
                   <FileUp className="w-12 h-12 text-blue-500 mx-auto" />
@@ -125,30 +139,9 @@ const Upload: React.FC = () => {
                 <p className="text-lg font-medium text-green-700">
                   Ficheiro carregado com sucesso!
                 </p>
-                {dadosMulta && (
-                  <div className="mt-4 text-left bg-white p-4 rounded-lg border border-green-200">
-                    <h3 className="font-medium text-slate-900 mb-2">Dados Extraídos:</h3>
-                    <div className="space-y-2 text-sm text-slate-600">
-                      <p>Nome: {dadosMulta.nomeCondutor}</p>
-                      <p>Matrícula: {dadosMulta.matricula}</p>
-                      <p>Data: {dadosMulta.data}</p>
-                      <p>Hora: {dadosMulta.hora}</p>
-                      <p>Local: {dadosMulta.local}</p>
-                      <p>Infração: {dadosMulta.infracao}</p>
-                    </div>
-                  </div>
-                )}
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => {
-                    setFile(null);
-                    setSuccess(false);
-                    setDadosMulta(null);
-                  }}
-                >
-                  Carregar outro ficheiro
-                </Button>
+                <p className="text-slate-600 mt-2">
+                  A redirecionar para a página de revisão...
+                </p>
               </div>
             )}
           </div>
