@@ -1,8 +1,13 @@
 // Script to convert https://registry URLs to http://registry in package-lock.json
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-const packageLockPath = path.join(process.cwd(), 'package-lock.json');
+// Get the current file path and directory in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const packageLockPath = join(__dirname, 'package-lock.json');
 
 try {
   // Read the package-lock.json file
