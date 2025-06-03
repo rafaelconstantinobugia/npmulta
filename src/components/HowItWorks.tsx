@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileUp, FileText, Send, ThumbsUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const steps = [
   {
@@ -61,14 +62,15 @@ const HowItWorks: React.FC = () => {
           ))}
         </div>
         
-        <Link to="/upload" className="mt-16 text-center block">
+        <div className="mt-16 text-center">
           <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-all shadow-md hover:shadow-lg inline-flex items-center gap-2">
             <FileUp className="h-5 w-5" />
             Carregar Multa Agora
           </button>
-        </Link>
+        </div>
       </div>
     </section>
+  );
 };
 
 export default HowItWorks;
