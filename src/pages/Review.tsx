@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, CheckCircle, Send, Download, Eye } from 'lucide-react';
+import { ArrowLeft, FileText, CheckCircle, Send, Download, Eye, Mail } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { DadosMulta } from '../types/multa';
 import { generateLetter } from '../utils/generateLetter';
@@ -12,6 +12,11 @@ const Review: React.FC = () => {
   const dadosMulta = location.state as DadosMulta;
   const [generating, setGenerating] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [sendViaEmail, setSendViaEmail] = useState(false);
+  const [email, setEmail] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   // Redirect to upload if no data is available
   React.useEffect(() => {
@@ -52,6 +57,48 @@ const Review: React.FC = () => {
   const handleViewPdf = () => {
     if (pdfUrl) {
       window.open(pdfUrl, '_blank');
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!email) {
+      setEmailError('Por favor, insira um endereço de email válido.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Por favor, insira um endereço de email válido.');
+      return;
+    }
+
+    try {
+      setSendingEmail(true);
+      setEmailError(null);
+
+      const response = await fetch('/.netlify/functions/sendLetter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          pdf: 'simulated-pdf-content' // In a real app, you might want to send the actual PDF data
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setEmailSent(true);
+        setSendingEmail(false);
+      } else {
+        throw new Error(data.error || 'Failed to send email');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      setEmailError('Ocorreu um erro ao enviar o email. Por favor, tente novamente.');
+      setSendingEmail(false);
     }
   };
 
@@ -143,7 +190,7 @@ const Review: React.FC = () => {
                 A sua carta de contestação foi gerada com sucesso. Pode agora descarregá-la ou visualizá-la no seu navegador.
               </p>
               
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
                 <Button
                   variant="primary"
                   size="large"
@@ -161,6 +208,66 @@ const Review: React.FC = () => {
                 >
                   Visualizar PDF
                 </Button>
+              </div>
+
+              <div className="mt-8 border-t border-green-200 pt-6">
+                <div className="flex items-center mb-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      checked={sendViaEmail}
+                      onChange={(e) => setSendViaEmail(e.target.checked)}
+                    />
+                    <span className="ml-2 text-slate-700">Enviar carta por email</span>
+                  </label>
+                </div>
+
+                {sendViaEmail && (
+                  <div className="animate-fadeIn">
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="email">
+                        Endereço de email
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        className={`w-full px-3 py-2 border ${emailError ? 'border-red-300' : 'border-slate-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                        placeholder="seu-email@exemplo.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={emailSent}
+                      />
+                      {emailError && (
+                        <p className="mt-1 text-sm text-red-600">{emailError}</p>
+                      )}
+                    </div>
+                    
+                    {emailSent ? (
+                      <div className="flex items-center text-green-600 mb-4">
+                        <CheckCircle className="w-5 h-5 mr-2" />
+                        <span>Email enviado com sucesso!</span>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        icon={<Mail className="w-5 h-5" />}
+                        onClick={handleSendEmail}
+                        className={sendingEmail ? "opacity-75 cursor-not-allowed" : ""}
+                        disabled={sendingEmail || !email}
+                      >
+                        {sendingEmail ? (
+                          <>
+                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                            A Enviar...
+                          </>
+                        ) : (
+                          "Enviar por Email"
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ) : (
