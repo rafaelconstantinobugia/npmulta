@@ -1,5 +1,61 @@
-For all designs I ask you to make, have them be beautiful, not cookie cutter. Make webpages that are fully featured and worthy for production.
+# 🚀 Projeto: Não Pagues a Multa
+Desenvolver um site minimalista que ajuda condutores em Portugal a contestar multas de trânsito, em 3 passos simples: **Carregar Multa → Rever Dados → Obter Carta de Recurso**.
 
-By default, this template supports JSX syntax with Tailwind CSS classes, React hooks, and Lucide React for icons. Do not install other packages for UI themes, icons, etc unless absolutely necessary or I request them.
+---
+## 🖥️  STACK TÉCNICO (FIXO)
+1. **React 18 + TypeScript** (via Vite)
+2. **React-Router-DOM v6** (para / e /upload)
+3. **Tailwind CSS 3** (estilo rápido e responsivo)
+4. **ESLint + Prettier** (código limpo)
+5. **Nenhum backend neste sprint** — guardar ficheiro apenas no state.
 
-Use icons from lucide-react for logos.
+_Bolt: instala **apenas** estas dependências com `npm`. Não invoques quaisquer APIs externas ainda._
+
+---
+## 🎯  OBJETIVOS DO SPRINT 1 (MVP-mínimo)
+| Ordem | Resultado esperado | Página / Componente |
+|-------|--------------------|---------------------|
+| 1 | Landing page com headline, descrição e botão **“Carregar Multa”** | `src/pages/Landing.tsx` |
+| 2 | Navegação para `/upload` através de **React Router** | `src/App.tsx` |
+| 3 | Página `/upload` com zona _drag-and-drop_ que aceita **PDF, JPG, PNG** | `src/pages/Upload.tsx` |
+| 4 | Mensagem de sucesso: “Ficheiro carregado com sucesso!” depois do upload | `src/pages/Upload.tsx` |
+| 5 | Layout limpo, cores Tailwind (`slate-50/100`, accent `blue-600`) e 100 % mobile-first | Global |
+
+> **Parar aqui!**  
+> Não criar OCR, não criar PDF nesta fase.  
+> Quando todos os testes passarem e o site compilar para produção (`npm run build` sem erros), termina a tarefa.
+
+---
+## 🧑‍💻  INSTRUÇÕES PARA O AGENTE BOLT
+1. Cria o projecto Vite+React+TS.  
+2. Adiciona & instala: `react-router-dom`, `@types/react-router-dom`, `tailwindcss`, `postcss`, `autoprefixer`.  
+3. Configura Tailwind (`content`, `theme`, plugins — básico).  
+4. Gera estrutura de pastas:
+src/
+├─ components/   # (Header, Footer, etc. gerados depois)
+├─ pages/
+│   ├─ Landing.tsx
+│   └─ Upload.tsx
+├─ App.tsx
+└─ main.tsx
+5. Implementa as páginas conforme a tabela de objetivos.  
+6. Testa com `npm run dev`. Garante que:
+   - O botão da _landing_ leva a `/upload`;
+   - O _drag-and-drop_ aceita ficheiros e mostra a mensagem de sucesso;
+   - Não existem erros no console.
+7. Faz `npm run build`. Se falhar, corrige e volta a testar _antes_ de sair.
+8. Publica para Netlify **mas só se o build passar**.
+
+### ⚙️  REGRAS DE BUILD
+- Usa `node >= 18`.
+- Se faltar um pacote, interrompe com instrução clara (“npm install <pkg>”).
+- Não alteres o registry npm.
+
+---
+## ✅  CRITÉRIOS DE ACEITAÇÃO
+- Sem erros em `npm install`, `npm run dev`, `npm run build`.
+- Navegação funcional entre `/` e `/upload`.
+- Upload de ficheiro mostra feedback e NÃO quebra reload.
+- Deploy Netlify acessível via URL e HTTPS válido.
+
+<!-- Fim do prompt -->
