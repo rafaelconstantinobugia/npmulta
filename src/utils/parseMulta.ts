@@ -14,6 +14,7 @@ result.data = extractDate(normalizedText);
 result.hora = extractTime(normalizedText);
 result.local = extractLocation(normalizedText);
 result.infracao = extractInfraction(normalizedText);
+result.condutor = extractCondutor(normalizedText);
 return result;
 }
 function extractMatricula(text: string): string | undefined {
@@ -68,10 +69,10 @@ return \`\${h.padStart(2, '0')}:\${m.padStart(2, '0')}\`;
 }
 }
 return undefined;
-}
 function extractLocation(text: string): string | undefined {
 const match = text.match(/(?:local|em|na|no)[:\s]+([\w\s,\.À-ÿ-]{4,30})/i);
 return match ? match[1].trim() : undefined;
+}
 }
 function extractInfraction(text: string): string | undefined {
 const keywords: { [key: string]: string } = {
@@ -84,6 +85,19 @@ const keywords: { [key: string]: string } = {
 const lower = text.toLowerCase();
 for (const key in keywords) {
 if (lower.includes(key)) return keywords[key];
+}
+return undefined;
+}
+function extractCondutor(text: string): string | undefined {
+const keywords = ['condutor', 'nome', 'infrator', 'infractor', 'arguido', 'identificado como'];
+for (const keyword of keywords) {
+const regex = new RegExp(`${keyword}\s*[:\-–]?\s*([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ][\w\s\-']{3,50})`, 'i');
+const match = regex.exec(text);
+if (match && match[1]) {
+let name = match[1].trim();
+name = name.replace(/\s+(morada|n[ºo]\.?|documento|com|natural).*/i, '').trim();
+return name;
+}
 }
 return undefined;
 }
