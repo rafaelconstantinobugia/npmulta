@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { FileUp, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileUp, CheckCircle, AlertCircle, FileText, Loader } from 'lucide-react';
 import Button from '../components/ui/Button';
-import { fakeOcr } from '../utils/fakeOcr';
-import { DadosMulta } from '../types/multa';
 import { useNavigate } from 'react-router-dom';
 import ProgressBar from '../components/ProgressBar';
+import { extractTextFromFile, parseExtractedText } from '../utils/ocr';
+import { DadosMulta, OcrResult } from '../types/multa';
 
 const Upload: React.FC = () => {
   const navigate = useNavigate();
@@ -13,8 +13,12 @@ const Upload: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [processingStage, setProcessingStage] = useState<string>('');
+  const [extractedText, setExtractedText] = useState<string>('');
 
   const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
+  const MAX_SIZE_MB = 10;
+  const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -27,8 +31,20 @@ const Upload: React.FC = () => {
   }, []);
 
   const validateFile = (file: File): boolean => {
+    // Check file extension
     const extension = '.' + file.name.split('.').pop()?.toLowerCase();
-    return allowedTypes.includes(extension);
+    if (!allowedTypes.includes(extension)) {
+      setError(`Tipo de ficheiro não suportado. Por favor, use ${allowedTypes.join(', ')}.`);
+      return false;
+    }
+
+    // Check file size
+    if (file.size > MAX_SIZE_BYTES) {
+      setError(`O ficheiro é demasiado grande. O tamanho máximo permitido é ${MAX_SIZE_MB}MB.`);
+      return false;
+    }
+
+    return true;
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -41,7 +57,6 @@ const Upload: React.FC = () => {
     if (!droppedFile) return;
 
     if (!validateFile(droppedFile)) {
-      setError('Tipo de ficheiro não suportado. Por favor, use PDF, JPG ou PNG.');
       return;
     }
 
@@ -52,17 +67,41 @@ const Upload: React.FC = () => {
   const processFile = async (file: File) => {
     try {
       setLoading(true);
-      const dados = await fakeOcr(file);
+      setProcessingStage('Analisando o ficheiro...');
+      
+      // Extract text from file using OCR
+      setProcessingStage('Extraindo texto...');
+      const text = await extractTextFromFile(file);
+      setExtractedText(text);
+      
+      // Parse the extracted text to get structured data
+      setProcessingStage('Identificando dados...');
+      const parsedData = parseExtractedText(text);
+      
+      // For the demo, we'll add a fake name since OCR might not extract it
+      const result: DadosMulta = {
+        nomeCondutor: "João Exemplo", // Default name since OCR might not extract it
+        matricula: parsedData.matricula || "00-AA-00",
+        data: parsedData.data || "01-01-2025",
+        hora: parsedData.hora || "14:32",
+        local: parsedData.local || "A1 km 145",
+        infracao: parsedData.infracao || "Excesso de velocidade"
+      };
+      
       setSuccess(true);
       setLoading(false);
       
       // Short delay for better UX, showing the success state before navigating
       setTimeout(() => {
-        navigate('/review', { state: dados });
+        navigate('/review', { state: result });
       }, 1500);
     } catch (error) {
       setLoading(false);
-      setError('Erro ao processar o ficheiro. Por favor, tente novamente.');
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Erro ao processar o ficheiro. Por favor, tente novamente.');
+      }
     }
   };
 
@@ -72,7 +111,6 @@ const Upload: React.FC = () => {
     if (!selectedFile) return;
 
     if (!validateFile(selectedFile)) {
-      setError('Tipo de ficheiro não suportado. Por favor, use PDF, JPG ou PNG.');
       return;
     }
 
@@ -104,8 +142,9 @@ const Upload: React.FC = () => {
           >
             {loading ? (
               <div className="text-center py-6">
-                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-lg text-slate-700">A processar o documento...</p>
+                <Loader className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+                <p className="text-lg text-slate-700 mb-2">{processingStage}</p>
+                <p className="text-sm text-slate-500">Este processo pode demorar alguns segundos...</p>
               </div>
             ) : !success ? (
               <>
@@ -133,7 +172,7 @@ const Upload: React.FC = () => {
                   aria-label="Selecionar ficheiro"
                 />
                 <p className="text-sm text-slate-500 mt-4">
-                  Formatos aceites: PDF, JPG, PNG
+                  Formatos aceites: PDF, JPG, PNG (máximo {MAX_SIZE_MB}MB)
                 </p>
               </>
             ) : (
@@ -153,6 +192,21 @@ const Upload: React.FC = () => {
             <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200 flex items-center gap-2 text-red-700">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <p>{error}</p>
+            </div>
+          )}
+
+          {extractedText && !success && (
+            <div className="mt-6">
+              <div className="bg-white rounded-lg p-4 border border-slate-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="w-5 h-5 text-blue-500" />
+                  <h3 className="font-medium text-slate-900">Texto Extraído (Prévia)</h3>
+                </div>
+                <div className="text-sm text-slate-700 max-h-40 overflow-y-auto bg-slate-50 p-3 rounded">
+                  {extractedText.substring(0, 500)}
+                  {extractedText.length > 500 && '...'}
+                </div>
+              </div>
             </div>
           )}
         </div>
