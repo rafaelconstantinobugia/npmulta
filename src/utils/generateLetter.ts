@@ -1,12 +1,16 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { DadosMulta } from '../types/multa';
 
+interface LetterData extends DadosMulta {
+  justificativa?: string;
+}
+
 /**
  * Generates a PDF letter for contesting a traffic ticket
  * @param dados The traffic ticket data
  * @returns A Promise that resolves to a Blob containing the PDF document
  */
-export async function generateLetter(dados: DadosMulta): Promise<Blob> {
+export async function generateLetter(dados: LetterData): Promise<Blob> {
   // Create a new PDF document
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595.28, 841.89]); // A4 size in points
@@ -88,21 +92,43 @@ export async function generateLetter(dados: DadosMulta): Promise<Blob> {
   });
   
   // Add letter content
-  const letterContent = [
-    `Eu, ${dados.nomeCondutor}, venho por este meio apresentar defesa relativa à contraordenação rodoviária alegadamente cometida no dia ${dados.data}, pelas ${dados.hora}, em ${dados.local}, com o veículo de matrícula ${dados.matricula}, pela suposta infração de "${dados.infracao}".`,
-    '',
-    'Após análise cuidadosa da notificação recebida, venho respeitosamente contestar esta alegada infração com base nos seguintes fundamentos:',
-    '',
-    '1. Insuficiência de prova fotográfica que comprove inequivocamente a infração alegada;',
-    '',
-    '2. Sinalização inadequada no local da infração, não cumprindo os requisitos legais estabelecidos pelo Código da Estrada, nomeadamente no que respeita à visibilidade, colocação e distância regulamentares;',
-    '',
-    '3. Ausência de comprovativo de calibração do aparelho de medição utilizado, conforme exigido pelo Decreto-Lei n.º 291/90, de 20 de Setembro e pela Portaria n.º 962/90, de 9 de Outubro;',
-    '',
-    'Face ao exposto, solicito o arquivamento do presente processo contraordenacional.',
-    '',
-    'Sem outro assunto de momento, apresento os meus melhores cumprimentos,'
-  ];
+  // First paragraph with user data
+  const openingParagraph = `Eu, ${dados.nomeCondutor}, venho por este meio apresentar defesa relativa à contraordenação rodoviária alegadamente cometida no dia ${dados.data}, pelas ${dados.hora}, em ${dados.local}, com o veículo de matrícula ${dados.matricula}, pela suposta infração de "${dados.infracao}".`;
+  
+  // Define content based on whether custom justification was provided
+  let letterContent: string[];
+  
+  if (dados.justificativa && dados.justificativa.trim() !== '') {
+    // Use the user-provided justification
+    letterContent = [
+      openingParagraph,
+      '',
+      'Após análise cuidadosa da notificação recebida, venho respeitosamente contestar esta alegada infração com base nos seguintes fundamentos:',
+      '',
+      dados.justificativa, // User's custom justification
+      '',
+      'Face ao exposto, solicito o arquivamento do presente processo contraordenacional.',
+      '',
+      'Sem outro assunto de momento, apresento os meus melhores cumprimentos,'
+    ];
+  } else {
+    // Use default arguments
+    letterContent = [
+      openingParagraph,
+      '',
+      'Após análise cuidadosa da notificação recebida, venho respeitosamente contestar esta alegada infração com base nos seguintes fundamentos:',
+      '',
+      '1. Insuficiência de prova fotográfica que comprove inequivocamente a infração alegada;',
+      '',
+      '2. Sinalização inadequada no local da infração, não cumprindo os requisitos legais estabelecidos pelo Código da Estrada, nomeadamente no que respeita à visibilidade, colocação e distância regulamentares;',
+      '',
+      '3. Ausência de comprovativo de calibração do aparelho de medição utilizado, conforme exigido pelo Decreto-Lei n.º 291/90, de 20 de Setembro e pela Portaria n.º 962/90, de 9 de Outubro;',
+      '',
+      'Face ao exposto, solicito o arquivamento do presente processo contraordenacional.',
+      '',
+      'Sem outro assunto de momento, apresento os meus melhores cumprimentos,'
+    ];
+  }
 
   let y = height - margin - lineHeight * 13;
   for (const line of letterContent) {

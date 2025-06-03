@@ -9,7 +9,11 @@ import ProgressBar from '../components/ProgressBar';
 const Review: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const dadosMulta = location.state as DadosMulta;
+  const initialData = location.state as DadosMulta;
+  const [formData, setFormData] = useState<DadosMulta & { justificativa?: string }>(
+    { ...initialData, justificativa: '' }
+  );
+  
   const [generating, setGenerating] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [sendViaEmail, setSendViaEmail] = useState(false);
@@ -20,19 +24,27 @@ const Review: React.FC = () => {
 
   // Redirect to upload if no data is available
   React.useEffect(() => {
-    if (!dadosMulta) {
+    if (!initialData) {
       navigate('/upload', { replace: true });
     }
-  }, [dadosMulta, navigate]);
+  }, [initialData, navigate]);
 
-  if (!dadosMulta) {
+  if (!initialData) {
     return null; // Return early if no data (will redirect via effect)
   }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleGenerateLetter = async () => {
     try {
       setGenerating(true);
-      const pdfBlob = await generateLetter(dadosMulta);
+      const pdfBlob = await generateLetter(formData);
       const url = URL.createObjectURL(pdfBlob);
       setPdfUrl(url);
       setGenerating(false);
@@ -47,7 +59,7 @@ const Review: React.FC = () => {
     if (pdfUrl) {
       const link = document.createElement('a');
       link.href = pdfUrl;
-      link.setAttribute('download', `contestacao-${dadosMulta.matricula}.pdf`);
+      link.setAttribute('download', `contestacao-${formData.matricula}.pdf`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -116,68 +128,127 @@ const Review: React.FC = () => {
           </div>
           
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-8">
-            Reveja os dados da multa
+            {pdfUrl ? 'Contestação Gerada' : 'Edite os dados da contestação'}
           </h1>
           
-          <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
-            <div className="p-6 border-b border-slate-100 bg-blue-50">
-              <div className="flex items-center">
-                <FileText className="w-6 h-6 text-blue-600 mr-2" />
-                <h2 className="text-xl font-semibold text-slate-900">Dados Extraídos do Documento</h2>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-1">Nome do Condutor</label>
-                  <p className="text-lg text-slate-900">{dadosMulta.nomeCondutor}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-1">Matrícula</label>
-                  <p className="text-lg text-slate-900">{dadosMulta.matricula}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-1">Data da Infração</label>
-                  <p className="text-lg text-slate-900">{dadosMulta.data}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-1">Hora da Infração</label>
-                  <p className="text-lg text-slate-900">{dadosMulta.hora}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-1">Local</label>
-                  <p className="text-lg text-slate-900">{dadosMulta.local}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-1">Infração</label>
-                  <p className="text-lg text-slate-900">{dadosMulta.infracao}</p>
+          {!pdfUrl && (
+            <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+              <div className="p-6 border-b border-slate-100 bg-blue-50">
+                <div className="flex items-center">
+                  <FileText className="w-6 h-6 text-blue-600 mr-2" />
+                  <h2 className="text-xl font-semibold text-slate-900">Dados para a Contestação</h2>
                 </div>
               </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label htmlFor="nomeCondutor" className="block text-sm font-medium text-slate-700 mb-1">
+                      Nome do Condutor
+                    </label>
+                    <input 
+                      type="text" 
+                      id="nomeCondutor" 
+                      name="nomeCondutor" 
+                      value={formData.nomeCondutor} 
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="matricula" className="block text-sm font-medium text-slate-700 mb-1">
+                      Matrícula
+                    </label>
+                    <input 
+                      type="text" 
+                      id="matricula" 
+                      name="matricula" 
+                      value={formData.matricula} 
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="data" className="block text-sm font-medium text-slate-700 mb-1">
+                      Data da Infração
+                    </label>
+                    <input 
+                      type="text" 
+                      id="data" 
+                      name="data" 
+                      value={formData.data} 
+                      onChange={handleInputChange}
+                      placeholder="DD-MM-YYYY"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="hora" className="block text-sm font-medium text-slate-700 mb-1">
+                      Hora da Infração
+                    </label>
+                    <input 
+                      type="text" 
+                      id="hora" 
+                      name="hora" 
+                      value={formData.hora} 
+                      onChange={handleInputChange}
+                      placeholder="HH:MM"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <label htmlFor="local" className="block text-sm font-medium text-slate-700 mb-1">
+                      Local
+                    </label>
+                    <input 
+                      type="text" 
+                      id="local" 
+                      name="local" 
+                      value={formData.local} 
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="infracao" className="block text-sm font-medium text-slate-700 mb-1">
+                      Infração
+                    </label>
+                    <input 
+                      type="text" 
+                      id="infracao" 
+                      name="infracao" 
+                      value={formData.infracao} 
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="justificativa" className="block text-sm font-medium text-slate-700 mb-1">
+                    Justificativa da Contestação
+                  </label>
+                  <textarea
+                    id="justificativa"
+                    name="justificativa"
+                    rows={6}
+                    value={formData.justificativa}
+                    onChange={handleInputChange}
+                    placeholder="Descreva os motivos da sua contestação..."
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  ></textarea>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Se deixar em branco, serão usados argumentos padrão.
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-green-100">
-            <div className="flex items-center mb-4">
-              <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
-              <h2 className="text-xl font-semibold text-slate-900">Motivos para Contestação Identificados</h2>
-            </div>
-            
-            <ul className="list-disc list-inside space-y-2 text-slate-700 ml-2 mb-4">
-              <li>Falta de prova fotográfica da infração</li>
-              <li>Sinalização inadequada no local da infração</li>
-              <li>Calibração do radar não comprovada</li>
-            </ul>
-            
-            <p className="text-sm text-slate-500 italic">
-              Estes motivos são baseados em análise estatística de contestações bem-sucedidas para infrações similares.
-            </p>
-          </div>
+          )}
           
           {pdfUrl ? (
             <div className="bg-green-50 rounded-xl shadow-md p-6 mb-8 border border-green-200">
