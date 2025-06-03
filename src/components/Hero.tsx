@@ -1,6 +1,7 @@
 import React from 'react';
 import { FileUp, ArrowRight } from 'lucide-react';
 import Button from './ui/Button';
+import { Link } from 'react-router-dom';
 
 const Hero: React.FC = () => {
   return (
@@ -15,13 +16,15 @@ const Hero: React.FC = () => {
               Carregue a sua multa e gere automaticamente uma carta de recurso pronta a enviar.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
-                variant="primary" 
-                size="large"
-                icon={<FileUp className="h-5 w-5" />}
-              >
-                Carregar Multa
-              </Button>
+              <Link to="/upload">
+                <Button 
+                  variant="primary" 
+                  size="large"
+                  icon={<FileUp className="h-5 w-5" />}
+                >
+                  Carregar Multa
+                </Button>
+              </Link>
               <Button 
                 variant="secondary" 
                 size="large"
