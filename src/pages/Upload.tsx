@@ -1,12 +1,15 @@
 import React, { useState, useCallback } from 'react';
 import { FileUp, CheckCircle, AlertCircle } from 'lucide-react';
 import Button from '../components/ui/Button';
+import { fakeOcr } from '../utils/fakeOcr';
+import { DadosMulta } from '../types/multa';
 
 const Upload: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [dadosMulta, setDadosMulta] = useState<DadosMulta | null>(null);
 
   const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
 
@@ -40,8 +43,18 @@ const Upload: React.FC = () => {
     }
 
     setFile(droppedFile);
-    setSuccess(true);
+    processFile(droppedFile);
   }, []);
+
+  const processFile = async (file: File) => {
+    try {
+      const dados = await fakeOcr(file);
+      setDadosMulta(dados);
+      setSuccess(true);
+    } catch (error) {
+      setError('Erro ao processar o ficheiro. Por favor, tente novamente.');
+    }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -54,7 +67,7 @@ const Upload: React.FC = () => {
     }
 
     setFile(selectedFile);
-    setSuccess(true);
+    processFile(selectedFile);
   };
 
   return (
@@ -112,15 +125,26 @@ const Upload: React.FC = () => {
                 <p className="text-lg font-medium text-green-700">
                   Ficheiro carregado com sucesso!
                 </p>
-                <p className="text-sm text-green-600 mt-2">
-                  {file?.name}
-                </p>
+                {dadosMulta && (
+                  <div className="mt-4 text-left bg-white p-4 rounded-lg border border-green-200">
+                    <h3 className="font-medium text-slate-900 mb-2">Dados Extraídos:</h3>
+                    <div className="space-y-2 text-sm text-slate-600">
+                      <p>Nome: {dadosMulta.nomeCondutor}</p>
+                      <p>Matrícula: {dadosMulta.matricula}</p>
+                      <p>Data: {dadosMulta.data}</p>
+                      <p>Hora: {dadosMulta.hora}</p>
+                      <p>Local: {dadosMulta.local}</p>
+                      <p>Infração: {dadosMulta.infracao}</p>
+                    </div>
+                  </div>
+                )}
                 <Button
                   variant="outline"
                   className="mt-4"
                   onClick={() => {
                     setFile(null);
                     setSuccess(false);
+                    setDadosMulta(null);
                   }}
                 >
                   Carregar outro ficheiro
