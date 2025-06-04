@@ -4,12 +4,11 @@ import Button from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import ProgressBar from '../components/ProgressBar';
 import { extractTextFromFile, parseExtractedText } from '../utils/ocr';
-import { DadosMulta, OcrResult } from '../types/multa';
+import { DadosMulta } from '../types/multa';
 
 const Upload: React.FC = () => {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,7 +59,6 @@ const Upload: React.FC = () => {
       return;
     }
 
-    setFile(droppedFile);
     processFile(droppedFile);
   }, []);
 
@@ -114,7 +112,6 @@ const Upload: React.FC = () => {
       return;
     }
 
-    setFile(selectedFile);
     processFile(selectedFile);
   };
 

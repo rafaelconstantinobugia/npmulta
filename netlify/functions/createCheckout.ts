@@ -1,7 +1,7 @@
 // This file was causing build errors, replacing with a dummy function
 import { Handler } from '@netlify/functions';
 
-const handler: Handler = async (event) => {
+const handler: Handler = async () => {
   // Return a placeholder response
   return {
     statusCode: 200,
