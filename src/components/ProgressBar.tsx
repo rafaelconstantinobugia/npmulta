@@ -19,7 +19,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep }) => {
           {/* Connecting Lines */}
           <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 h-1 bg-slate-200 z-0"></div>
           
-          {steps.map((step, index) => {
+        {steps.map((step) => {
             // Determine step status
             const isCompleted = currentStep > step.number;
             const isActive = currentStep === step.number;

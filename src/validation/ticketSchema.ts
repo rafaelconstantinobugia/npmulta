@@ -21,7 +21,7 @@ export const ticketSchema = yup.object({
     .matches(/^([01]\d|2[0-3]):[0-5]\d$/, 'Formato HH:MM')
     .required('Hora é obrigatória'),
   fineAmount: yup.string()
-    .matches(/^\d+([,\.]\d{2})? *€?$/, 'Valor em €')
+    .matches(/^\d+([,.]\d{2})? *€?$/, 'Valor em €')
     .required('Valor é obrigatório'),
   article: yup.string().optional()
 });
@@ -39,7 +39,7 @@ export function validateTicketFields(fields: TicketFields) {
 
   // Check confidence levels
   Object.entries(fields).forEach(([key, field]) => {
-    if (field.confidence < CONF_THRESHOLD) {
+    if (field && field.confidence < CONF_THRESHOLD) {
       lowConfidence.push(key as keyof TicketFields);
     }
   });

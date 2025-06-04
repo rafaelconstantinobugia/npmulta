@@ -22,7 +22,7 @@ export interface LetterData {
   locale?: string;
 }
 
-let templateCache: { [key: string]: HandlebarsTemplateDelegate } = {};
+const templateCache: { [key: string]: HandlebarsTemplateDelegate } = {};
 
 async function loadTemplate(locale: string = 'pt'): Promise<HandlebarsTemplateDelegate> {
   if (templateCache[locale]) {
@@ -62,7 +62,7 @@ export async function generateLetter(data: LetterData): Promise<Uint8Array> {
 
   // Add first page
   const page = pdfDoc.addPage([595.28, 841.89]); // A4
-  const { width, height } = page.getSize();
+  const { height } = page.getSize();
   const margin = 70; // ~25mm
 
   // Load and compile template

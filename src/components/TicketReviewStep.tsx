@@ -81,3 +81,5 @@ const TicketReviewStep: React.FC<TicketReviewStepProps> = ({ ocrFields, onSubmit
     </Formik>
   );
 };
+
+export default TicketReviewStep;
