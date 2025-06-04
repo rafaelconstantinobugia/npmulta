@@ -6,6 +6,7 @@ import { DadosMulta } from '../types/multa';
 import { generateLetter } from '../utils/generateLetter';
 import ProgressBar from '../components/ProgressBar';
 import CheckoutButton from '../components/ui/CheckoutButton';
+import { Purchases } from '@revenuecat/purchases-js';
 
 const Review: React.FC = () => {
   const location = useLocation();
@@ -22,31 +23,30 @@ const Review: React.FC = () => {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
-  const [paymentComplete, setPaymentComplete] = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
 
-  // Check if payment has been completed (from success page redirect)
+  // Check if user has already paid
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const sessionId = searchParams.get('session_id');
-    
-    if (sessionId) {
-      // Verify payment server-side
-      const verifyPayment = async () => {
-        try {
-          const response = await fetch(`/.netlify/functions/verifyPayment?session_id=${sessionId}`);
-          const data = await response.json();
-          
-          if (response.ok && data.paid) {
-            setPaymentComplete(true);
-          }
-        } catch (error) {
-          console.error('Error verifying payment:', error);
+    const checkEntitlement = async () => {
+      try {
+        const info = await Purchases.getCustomerInfo();
+        if (info.entitlements.active.carta_pdf) {
+          setHasPaid(true);
         }
-      };
-      
-      verifyPayment();
+      } catch (error) {
+        console.error('Error checking entitlement:', error);
+      }
+    };
+    
+    checkEntitlement();
+  }, []);
+
+  // Store form data in localStorage for access after payment
+  useEffect(() => {
+    if (initialData) {
+      localStorage.setItem('multa_data', JSON.stringify(formData));
     }
-  }, [location.search]);
+  }, [formData, initialData]);
 
   // Redirect to upload if no data is available
   useEffect(() => {
@@ -392,7 +392,7 @@ const Review: React.FC = () => {
                 )}
               </div>
             </div>
-          ) : paymentComplete ? (
+          ) : hasPaid ? (
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button
                 variant="primary"

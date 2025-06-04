@@ -1,52 +1,72 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Download, ArrowLeft, FileText, Loader, AlertCircle } from 'lucide-react';
 import Button from '../components/ui/Button';
 import ProgressBar from '../components/ProgressBar';
+import { Purchases } from '@revenuecat/purchases-js';
+import { DadosMulta } from '../types/multa';
+import { generateLetter } from '../utils/generateLetter';
 
 const Success: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
-  const location = useLocation();
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  // Extract session_id from URL
-  const searchParams = new URLSearchParams(location.search);
-  const sessionId = searchParams.get('session_id');
-
   useEffect(() => {
-    // If no session_id is present, redirect to home
-    if (!sessionId) {
-      navigate('/', { replace: true });
-      return;
-    }
-
-    // Verify payment status
-    const verifyPayment = async () => {
+    const verifyPurchase = async () => {
       try {
         setLoading(true);
-        setError(null);
-
-        const response = await fetch(`/.netlify/functions/verifyPayment?session_id=${sessionId}`);
-        const data = await response.json();
-
-        if (response.ok && data.paid) {
+        
+        // Get customer info from RevenueCat
+        const info = await Purchases.getCustomerInfo();
+        
+        // Check if the user has the entitlement for the PDF
+        if (info.entitlements.active.carta_pdf) {
           setVerified(true);
-          // If we have state data in sessionStorage, keep it for PDF generation
+          
+          // Get stored data from localStorage
+          const storedData = localStorage.getItem('multa_data');
+          if (storedData) {
+            const parsedData: DadosMulta = JSON.parse(storedData);
+            
+            // Generate the letter PDF
+            const pdfBlob = await generateLetter(parsedData);
+            const url = URL.createObjectURL(pdfBlob);
+            setPdfUrl(url);
+            
+            // Auto-download the PDF
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `contestacao-${parsedData.matricula || 'multa'}.pdf`;
+            a.click();
+          }
         } else {
-          throw new Error(data.error || 'Pagamento não confirmado');
+          // No entitlement, redirect to review page
+          navigate('/review');
         }
       } catch (err) {
-        console.error('Error verifying payment:', err);
+        console.error('Error verifying purchase:', err);
         setError('Não foi possível verificar o seu pagamento. Por favor, contacte o suporte.');
       } finally {
         setLoading(false);
       }
     };
 
-    verifyPayment();
-  }, [sessionId, navigate]);
+    verifyPurchase();
+  }, [navigate]);
+
+  const handleDownloadPdf = () => {
+    if (pdfUrl) {
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.setAttribute('download', 'carta-de-recurso.pdf');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 pt-24 pb-16">
@@ -97,18 +117,17 @@ const Success: React.FC = () => {
                 </div>
                 <h2 className="text-xl font-semibold text-slate-900 text-center mb-4">Pagamento Bem-Sucedido!</h2>
                 <p className="text-slate-700 text-center mb-6">
-                  O seu pagamento foi confirmado. Já pode descarregar a sua carta de contestação.
+                  O seu pagamento foi confirmado. A sua carta de contestação já foi descarregada automaticamente.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
-                  <Link to="/review">
-                    <Button
-                      variant="primary"
-                      size="large"
-                      icon={<Download className="w-5 h-5" />}
-                    >
-                      Descarregar Carta
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="primary"
+                    size="large"
+                    icon={<Download className="w-5 h-5" />}
+                    onClick={handleDownloadPdf}
+                  >
+                    Descarregar Novamente
+                  </Button>
                   <Link to="/">
                     <Button
                       variant="secondary"
@@ -127,8 +146,7 @@ const Success: React.FC = () => {
             <div className="mt-8 bg-blue-50 rounded-lg p-6 border border-blue-100">
               <h3 className="font-medium text-slate-900 mb-2">Próximos Passos:</h3>
               <ol className="list-decimal list-inside space-y-2 text-slate-700">
-                <li>Descarregue a sua carta de contestação</li>
-                <li>Imprima o documento</li>
+                <li>Imprima a sua carta de contestação</li>
                 <li>Assine no local indicado</li>
                 <li>Envie por correio registado para a entidade emissora da multa</li>
                 <li>Guarde o comprovativo de envio</li>

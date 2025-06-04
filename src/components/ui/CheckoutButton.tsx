@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import { Purchases } from '@revenuecat/purchases-js';
 import Button from './Button';
 import { CreditCard, Loader } from 'lucide-react';
 
-// Load Stripe
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUB!);
-
 interface CheckoutButtonProps {
-  email: string;
+  email?: string;
   disabled?: boolean;
 }
 
@@ -16,36 +13,18 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({ email, disabled = false
   const [error, setError] = useState<string | null>(null);
 
   const handlePayment = async () => {
-    if (!email) {
-      setError('Por favor, forneça um endereço de email válido.');
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
 
-      // Create checkout session
-      const response = await fetch('/.netlify/functions/createCheckout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
+      const { customerInfo } = await Purchases.purchasePackageWith({
+        packageIdentifier: 'carta_pdf',
       });
 
-      if (!response.ok) {
-        throw new Error('Falha ao criar sessão de pagamento');
-      }
-
-      const { id: sessionId } = await response.json();
-      
-      // Redirect to Stripe checkout
-      const stripe = await stripePromise;
-      const { error } = await stripe!.redirectToCheckout({ sessionId });
-
-      if (error) {
-        throw error;
+      if (customerInfo.entitlements.active.carta_pdf) {
+        window.location.href = '/success';
+      } else {
+        throw new Error('O pagamento não foi concluído');
       }
     } catch (err) {
       console.error('Payment error:', err);
@@ -73,7 +52,7 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({ email, disabled = false
       )}
       
       <p className="mt-2 text-xs text-slate-500 text-center">
-        Pagamento seguro processado por Stripe. As suas informações de pagamento nunca são armazenadas nos nossos servidores.
+        Pagamento seguro processado por RevenueCat. As suas informações de pagamento nunca são armazenadas nos nossos servidores.
       </p>
     </div>
   );
