@@ -1,6 +1,5 @@
-import { Purchases } from '@revenuecat/purchases-js';
-
+// This file is kept for compatibility but functionality is disabled
 export function initRC() {
-  if (import.meta.env.VITE_FREE_MODE === 'true') return;
-  Purchases.configure({ apiKey: import.meta.env.VITE_RC_PUBLIC || 'rcb_YFoqIkzNDhDXFCqymyjjPyeVYukx' });
+  // Do nothing - payments are disabled
+  console.log('Payment system is disabled - free mode is active');
 }
