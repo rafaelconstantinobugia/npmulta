@@ -11,6 +11,9 @@ interface CheckoutButtonProps {
 const CheckoutButton: React.FC<CheckoutButtonProps> = ({ email, disabled = false }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [discountCode, setDiscountCode] = useState('');
+  const [discountApplied, setDiscountApplied] = useState(false);
+  const [discountError, setDiscountError] = useState<string | null>(null);
 
   // If in free mode, don't render the component at all
   if (import.meta.env.VITE_FREE_MODE === 'true') return null;
@@ -42,8 +45,49 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({ email, disabled = false
     }
   };
 
+  const applyDiscount = () => {
+    if (!discountCode.trim()) {
+      setDiscountError('Por favor, insira um código de desconto válido.');
+      return;
+    }
+
+    // Simulate checking discount code - in a real app this would be an API call
+    if (discountCode.toUpperCase() === 'PRIMEIRO10' || discountCode.toUpperCase() === 'WELCOME20') {
+      setDiscountApplied(true);
+      setDiscountError(null);
+    } else {
+      setDiscountError('Código de desconto inválido. Por favor, tente outro código.');
+    }
+  };
+
   return (
     <div className="mt-6">
+      <div className="mb-4">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            className="flex-1 px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Código de desconto"
+            value={discountCode}
+            onChange={(e) => setDiscountCode(e.target.value)}
+            disabled={discountApplied}
+          />
+          <button
+            className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 transition-colors"
+            onClick={applyDiscount}
+            disabled={discountApplied}
+          >
+            Aplicar
+          </button>
+        </div>
+        {discountError && (
+          <div className="mt-1 text-sm text-red-600">{discountError}</div>
+        )}
+        {discountApplied && (
+          <div className="mt-1 text-sm text-green-600">Desconto aplicado com sucesso!</div>
+        )}
+      </div>
+
       <Button
         variant="primary"
         size="large"
@@ -52,7 +96,7 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({ email, disabled = false
         className="w-full"
         disabled={disabled || loading}
       >
-        {loading ? 'A processar...' : 'Pagar €9,90 e obter carta'}
+        {loading ? 'A processar...' : discountApplied ? 'Pagar €7,90 e obter carta' : 'Pagar €9,90 e obter carta'}
       </Button>
       
       {error && (
