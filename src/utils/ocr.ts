@@ -5,6 +5,66 @@ import type { TextItem } from 'pdfjs-dist/types/src/display/api';
 import { parseMulta } from './parseMulta';
 import { DadosMulta } from '../types/multa';
 
+let workerPromise: Promise<Tesseract.Worker> | null = null;
+
+async function getOcrWorker(): Promise<Tesseract.Worker> {
+  if (!workerPromise) {
+    workerPromise = (async () => {
+      const worker = await Tesseract.createWorker({
+        logger: m => console.log(m)
+      });
+      await worker.loadLanguage('por');
+      await worker.initialize('por');
+      await worker.setParameters({
+        tessedit_pageseg_mode: '6'
+      });
+      return worker;
+    })();
+  }
+  return workerPromise;
+}
+
+async function preprocessImage(src: File | string): Promise<string> {
+  const url = typeof src === 'string' ? src : URL.createObjectURL(src);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        if (typeof src !== 'string') {
+          URL.revokeObjectURL(url);
+        }
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+        data[i] = avg;
+        data[i + 1] = avg;
+        data[i + 2] = avg;
+      }
+      ctx.putImageData(imageData, 0, 0);
+      if (typeof src !== 'string') {
+        URL.revokeObjectURL(url);
+      }
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => {
+      if (typeof src !== 'string') {
+        URL.revokeObjectURL(url);
+      }
+      reject(new Error('Falha ao pré-processar a imagem.'));
+    };
+    img.src = url;
+  });
+}
+
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
@@ -15,25 +75,14 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
  */
 async function extractTextFromImage(imageFile: File): Promise<string> {
   try {
-    // Create a URL for the image file
-    const imageUrl = URL.createObjectURL(imageFile);
-    
-    // Process the image with Tesseract
-    const result = await Tesseract.recognize(
-      imageUrl,
-      'por', // Portuguese language
-      {
-        logger: m => {
-          console.log(m);
-        }
-      }
-    );
-    
-    // Clean up the URL object
-    URL.revokeObjectURL(imageUrl);
-    
-    // Return the recognized text
-    return result.data.text;
+    const worker = await getOcrWorker();
+
+    // Preprocess the image to improve OCR results
+    const processed = await preprocessImage(imageFile);
+
+    const { data } = await worker.recognize(processed);
+
+    return data.text;
   } catch (error) {
     console.error('Error extracting text from image:', error);
     throw new Error('Falha ao extrair texto da imagem. Por favor, tente novamente com outra imagem.');
@@ -121,18 +170,13 @@ async function extractTextFromScannedPdf(pdfBuffer: ArrayBuffer): Promise<string
       // Convert canvas to image data URL
       const imageDataUrl = canvas.toDataURL('image/png');
       
-      // Perform OCR on the image
-      const result = await Tesseract.recognize(
-        imageDataUrl,
-        'por', // Portuguese language
-        {
-          logger: m => {
-            console.log(m);
-          }
-        }
-      );
-      
-      combinedText += result.data.text + '\n\n';
+      const worker = await getOcrWorker();
+
+      const processed = await preprocessImage(imageDataUrl);
+
+      const { data } = await worker.recognize(processed);
+
+      combinedText += data.text + '\n\n';
     }
     
     return combinedText;
