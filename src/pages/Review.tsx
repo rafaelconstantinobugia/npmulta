@@ -24,11 +24,18 @@ const Review: React.FC = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
+  
+  const isFree = import.meta.env.VITE_FREE_MODE === 'true';
 
   // Check if user has already paid
   useEffect(() => {
     const checkEntitlement = async () => {
       try {
+        if (isFree) {
+          setHasPaid(true);
+          return;
+        }
+        
         const info = await Purchases.getCustomerInfo();
         if (info.entitlements.active.carta_pdf) {
           setHasPaid(true);
@@ -39,7 +46,7 @@ const Review: React.FC = () => {
     };
     
     checkEntitlement();
-  }, []);
+  }, [isFree]);
 
   // Store form data in localStorage for access after payment
   useEffect(() => {
@@ -274,30 +281,32 @@ const Review: React.FC = () => {
                 </div>
               </div>
               
-              <div className="px-6 pb-6">
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 mb-4">
-                  <h3 className="font-medium text-slate-900 mb-2">Pagar para Obter a Carta</h3>
-                  <p className="text-slate-700 text-sm">
-                    Para gerar e descarregar a carta de contestação personalizada, é necessário efetuar o pagamento único de €9,90.
-                  </p>
+              {!isFree && (
+                <div className="px-6 pb-6">
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 mb-4">
+                    <h3 className="font-medium text-slate-900 mb-2">Pagar para Obter a Carta</h3>
+                    <p className="text-slate-700 text-sm">
+                      Para gerar e descarregar a carta de contestação personalizada, é necessário efetuar o pagamento único de €9,90.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+                      Email para receber confirmação
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="seu-email@exemplo.com"
+                    />
+                  </div>
+                  
+                  <CheckoutButton email={email} disabled={!email} />
                 </div>
-                
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
-                    Email para receber confirmação
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="seu-email@exemplo.com"
-                  />
-                </div>
-                
-                <CheckoutButton email={email} disabled={!email} />
-              </div>
+              )}
             </div>
           )}
           
@@ -392,7 +401,7 @@ const Review: React.FC = () => {
                 )}
               </div>
             </div>
-          ) : hasPaid ? (
+          ) : hasPaid || isFree ? (
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button
                 variant="primary"
@@ -408,7 +417,7 @@ const Review: React.FC = () => {
                     A Gerar Carta...
                   </>
                 ) : (
-                  "Gerar Carta de Recurso"
+                  isFree ? "Gerar Carta (Modo Teste)" : "Gerar Carta de Recurso"
                 )}
               </Button>
               

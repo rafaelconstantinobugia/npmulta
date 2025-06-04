@@ -14,10 +14,39 @@ const Success: React.FC = () => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   
+  const isFree = import.meta.env.VITE_FREE_MODE === 'true';
+  
   useEffect(() => {
     const verifyPurchase = async () => {
       try {
         setLoading(true);
+        
+        // If in free mode, skip verification
+        if (isFree) {
+          setVerified(true);
+          
+          // Get stored data from localStorage
+          const storedData = localStorage.getItem('multa_data');
+          if (storedData) {
+            const parsedData: DadosMulta = JSON.parse(storedData);
+            
+            // Generate the letter PDF
+            const pdfBlob = await generateLetter(parsedData);
+            const url = URL.createObjectURL(pdfBlob);
+            setPdfUrl(url);
+            
+            // Auto-download the PDF
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `contestacao-${parsedData.matricula || 'multa'}.pdf`;
+            a.click();
+          } else {
+            setError('Não foi possível encontrar os dados da multa. Por favor, volte à página de revisão.');
+          }
+          
+          setLoading(false);
+          return;
+        }
         
         // Get customer info from RevenueCat
         const info = await Purchases.getCustomerInfo();
@@ -41,6 +70,8 @@ const Success: React.FC = () => {
             a.href = url;
             a.download = `contestacao-${parsedData.matricula || 'multa'}.pdf`;
             a.click();
+          } else {
+            setError('Não foi possível encontrar os dados da multa. Por favor, volte à página de revisão.');
           }
         } else {
           // No entitlement, redirect to review page
@@ -55,7 +86,7 @@ const Success: React.FC = () => {
     };
 
     verifyPurchase();
-  }, [navigate]);
+  }, [navigate, isFree]);
 
   const handleDownloadPdf = () => {
     if (pdfUrl) {
@@ -82,14 +113,16 @@ const Success: React.FC = () => {
           </div>
 
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-8 text-center">
-            {verified ? 'Pagamento Confirmado' : 'A Verificar Pagamento'}
+            {isFree ? 'Contestação Gerada' : (verified ? 'Pagamento Confirmado' : 'A Verificar Pagamento')}
           </h1>
           
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             {loading ? (
               <div className="p-8 text-center">
                 <Loader className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
-                <p className="text-lg text-slate-700">A verificar o seu pagamento...</p>
+                <p className="text-lg text-slate-700">
+                  {isFree ? 'A gerar a sua carta...' : 'A verificar o seu pagamento...'}
+                </p>
               </div>
             ) : error ? (
               <div className="p-8">
@@ -115,9 +148,13 @@ const Success: React.FC = () => {
                     <CheckCircle className="w-8 h-8 text-green-500" />
                   </div>
                 </div>
-                <h2 className="text-xl font-semibold text-slate-900 text-center mb-4">Pagamento Bem-Sucedido!</h2>
+                <h2 className="text-xl font-semibold text-slate-900 text-center mb-4">
+                  {isFree ? 'Carta Gerada com Sucesso!' : 'Pagamento Bem-Sucedido!'}
+                </h2>
                 <p className="text-slate-700 text-center mb-6">
-                  O seu pagamento foi confirmado. A sua carta de contestação já foi descarregada automaticamente.
+                  {isFree 
+                    ? 'A sua carta de contestação foi gerada em modo de teste. O download já foi iniciado automaticamente.' 
+                    : 'O seu pagamento foi confirmado. A sua carta de contestação já foi descarregada automaticamente.'}
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <Button
@@ -151,6 +188,11 @@ const Success: React.FC = () => {
                 <li>Envie por correio registado para a entidade emissora da multa</li>
                 <li>Guarde o comprovativo de envio</li>
               </ol>
+              {isFree && (
+                <p className="mt-4 text-sm text-blue-600 bg-blue-100 p-2 rounded">
+                  <strong>Modo de teste ativo:</strong> Este PDF foi gerado em modo de teste. Em produção, seria necessário um pagamento.
+                </p>
+              )}
             </div>
           )}
         </div>

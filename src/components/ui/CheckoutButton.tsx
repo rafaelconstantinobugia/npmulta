@@ -12,10 +12,18 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({ email, disabled = false
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // If in free mode, don't render the component at all
+  if (import.meta.env.VITE_FREE_MODE === 'true') return null;
+
   const handlePayment = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      // Store email in localStorage for later use
+      if (email) {
+        localStorage.setItem('user_email', email);
+      }
 
       const { customerInfo } = await Purchases.purchasePackageWith({
         packageIdentifier: 'carta_pdf',
