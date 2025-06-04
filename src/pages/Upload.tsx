@@ -6,6 +6,10 @@ import ProgressBar from '../components/ProgressBar';
 import { extractTextFromFile, parseExtractedText } from '../utils/ocr';
 import { DadosMulta } from '../types/multa';
 
+const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
+const MAX_SIZE_MB = 10;
+const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
 const Upload: React.FC = () => {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
@@ -15,9 +19,6 @@ const Upload: React.FC = () => {
   const [processingStage, setProcessingStage] = useState<string>('');
   const [extractedText, setExtractedText] = useState<string>('');
 
-  const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
-  const MAX_SIZE_MB = 10;
-  const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -29,7 +30,7 @@ const Upload: React.FC = () => {
     }
   }, []);
 
-  const validateFile = (file: File): boolean => {
+  const validateFile = useCallback((file: File): boolean => {
     // Check file extension
     const extension = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!allowedTypes.includes(extension)) {
@@ -44,7 +45,7 @@ const Upload: React.FC = () => {
     }
 
     return true;
-  };
+  }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -60,9 +61,9 @@ const Upload: React.FC = () => {
     }
 
     processFile(droppedFile);
-  }, []);
+  }, [processFile, validateFile]);
 
-  const processFile = async (file: File) => {
+  const processFile = useCallback(async (file: File) => {
     try {
       setLoading(true);
       setProcessingStage('Analisando o ficheiro...');
@@ -101,7 +102,7 @@ const Upload: React.FC = () => {
         setError('Erro ao processar o ficheiro. Por favor, tente novamente.');
       }
     }
-  };
+  }, [navigate]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
