@@ -1,6 +1,8 @@
 import * as Tesseract from 'tesseract.js';
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
+import { parseMulta } from './parseMulta';
+import { DadosMulta } from '../types/multa';
 
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -140,75 +142,12 @@ async function extractTextFromScannedPdf(pdfBuffer: ArrayBuffer): Promise<string
 }
 
 /**
- * Extracts specific data patterns from text
+ * Parses extracted text to get structured data
  * @param text The text to parse
  * @returns An object containing extracted data
  */
-export function parseExtractedText(text: string) {
-  // Initialize data structure
-  const data = {
-    matricula: '',
-    data: '',
-    local: '',
-    infracao: '',
-    hora: ''
-  };
-  
-  // Extract license plate (matricula)
-  // Portuguese license plates: 00-AA-00, AA-00-00, or 00-00-AA
-  const matriculaRegex = /\b([A-Z0-9]{2}[-][A-Z0-9]{2}[-][A-Z0-9]{2})\b/gi;
-  const matriculaMatch = text.match(matriculaRegex);
-  if (matriculaMatch) {
-    data.matricula = matriculaMatch[0];
-  }
-  
-  // Extract date (data)
-  // Common date formats: DD-MM-YYYY, DD/MM/YYYY
-  const dateRegex = /\b(\d{2}[-/]\d{2}[-/]\d{4})\b/g;
-  const dateMatch = text.match(dateRegex);
-  if (dateMatch) {
-    data.data = dateMatch[0];
-  }
-  
-  // Extract time (hora)
-  // Time format: HH:MM or HH.MM
-  const timeRegex = /\b(\d{2}[:\.]\d{2})\b/g;
-  const timeMatch = text.match(timeRegex);
-  if (timeMatch) {
-    data.hora = timeMatch[0];
-  }
-  
-  // Look for location information
-  // This is more complex and might require specific patterns or keywords
-  const locationKeywords = ['local:', 'localização:', 'em:', 'na:', 'no:'];
-  for (const keyword of locationKeywords) {
-    const index = text.toLowerCase().indexOf(keyword);
-    if (index !== -1) {
-      // Extract text after the keyword until the next period or newline
-      const locationText = text.substring(index + keyword.length).split(/[.\n]/)[0].trim();
-      if (locationText.length > 3) {
-        data.local = locationText;
-        break;
-      }
-    }
-  }
-  
-  // Look for violation information
-  // This is also complex and might require specific patterns or keywords
-  const violationKeywords = ['infração:', 'contraordenação:', 'violação:'];
-  for (const keyword of violationKeywords) {
-    const index = text.toLowerCase().indexOf(keyword);
-    if (index !== -1) {
-      // Extract text after the keyword until the next period or newline
-      const violationText = text.substring(index + keyword.length).split(/[.\n]/)[0].trim();
-      if (violationText.length > 3) {
-        data.infracao = violationText;
-        break;
-      }
-    }
-  }
-  
-  return data;
+export function parseExtractedText(text: string): Partial<DadosMulta> {
+  return parseMulta(text);
 }
 
 /**

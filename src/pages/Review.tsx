@@ -5,6 +5,7 @@ import Button from '../components/ui/Button';
 import { DadosMulta } from '../types/multa';
 import { generateLetter } from '../utils/generateLetter';
 import ProgressBar from '../components/ProgressBar';
+import CheckoutButton from '../components/ui/CheckoutButton';
 
 const Review: React.FC = () => {
   const location = useLocation();
@@ -48,6 +49,9 @@ const Review: React.FC = () => {
       const url = URL.createObjectURL(pdfBlob);
       setPdfUrl(url);
       setGenerating(false);
+      
+      // Store form data in localStorage for access in Success page
+      localStorage.setItem('multa_data', JSON.stringify(formData));
     } catch (error) {
       console.error('Error generating PDF:', error);
       setGenerating(false);
@@ -340,6 +344,8 @@ const Review: React.FC = () => {
                   </div>
                 )}
               </div>
+              
+              <CheckoutButton disabled={!pdfUrl} email={email} />
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row justify-center gap-4">
