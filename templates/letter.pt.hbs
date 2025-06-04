@@ -1,0 +1,26 @@
+{{> header}}
+
+Ex.mo(a) Sr.(a) Presidente da Autoridade Nacional de Segurança Rodoviária,
+
+Processo nº {{processNumber}}
+Matrícula: {{upper plate}}
+Data / Hora: {{date_pt date}} às {{time}}
+Local: {{location}}
+{{#if fineAmount}}Valor da Coima: {{money fineAmount}}{{/if}}
+{{#if article}}Artigo: {{article}}{{/if}}
+
+Eu, {{upper name}}, venho por este meio apresentar defesa relativa à contraordenação rodoviária acima identificada.
+
+{{#if autoDraftLaw}}
+{{> legal_arguments}}
+{{else}}
+{{customArguments}}
+{{/if}}
+
+Nestes termos, requer-se a V. Ex.ª que se digne determinar o arquivamento do presente processo contraordenacional.
+
+Pede deferimento,
+{{date_pt currentDate}}
+
+_____________________
+{{upper name}}
