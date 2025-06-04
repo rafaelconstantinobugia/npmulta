@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, FileText, CheckCircle, Send, Download, Eye, Mail } from 'lucide-react';
 import Button from '../components/ui/Button';
@@ -22,15 +22,8 @@ const Review: React.FC = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
 
-  // Store form data in localStorage for access after navigating away
-  useEffect(() => {
-    if (initialData) {
-      localStorage.setItem('multa_data', JSON.stringify(formData));
-    }
-  }, [formData, initialData]);
-
   // Redirect to upload if no data is available
-  useEffect(() => {
+  React.useEffect(() => {
     if (!initialData) {
       navigate('/upload', { replace: true });
     }
@@ -55,6 +48,9 @@ const Review: React.FC = () => {
       const url = URL.createObjectURL(pdfBlob);
       setPdfUrl(url);
       setGenerating(false);
+      
+      // Store form data in localStorage for access in Success page
+      localStorage.setItem('multa_data', JSON.stringify(formData));
     } catch (error) {
       console.error('Error generating PDF:', error);
       setGenerating(false);

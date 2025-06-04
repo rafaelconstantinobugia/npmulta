@@ -13,7 +13,7 @@ const Success: React.FC = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    const generatePDF = async () => {
+    const generatePdf = async () => {
       try {
         setLoading(true);
         
@@ -35,16 +35,15 @@ const Success: React.FC = () => {
         } else {
           setError('Não foi possível encontrar os dados da multa. Por favor, volte à página de revisão.');
         }
-        
       } catch (err) {
         console.error('Error generating PDF:', err);
-        setError('Não foi possível gerar a carta. Por favor, volte à página de revisão.');
+        setError('Ocorreu um erro ao gerar o documento. Por favor, tente novamente.');
       } finally {
         setLoading(false);
       }
     };
 
-    generatePDF();
+    generatePdf();
   }, [navigate]);
 
   const handleDownloadPdf = () => {
