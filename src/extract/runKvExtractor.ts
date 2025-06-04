@@ -26,7 +26,7 @@ export async function runKvExtractor(
   // Combine user signal with timeout signal if provided
   const combinedSignal = opts.signal 
     ? { signal: AbortSignal.any([opts.signal, timeoutController.signal]) } 
-    : { signal: timeoutController.signal };
+  const apiUrl = import.meta.env.VITE_KV_EXTRACT_URL || '/.netlify/functions/kv-extract';
   
   try {
     // Determine the extract API URL

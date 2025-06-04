@@ -3,19 +3,25 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  envPrefix: 'VITE_',
   optimizeDeps: {
-    exclude: ['lucide-react']
+    exclude: ['lucide-react'],
+    include: ['react', 'react-dom', 'react-router-dom']
   },
   build: {
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules/lucide-react')) {
-            return 'lucide-icons';
-          }
-        }
+        manualChunks: {
+          'vendor': ['react', 'react-dom', 'react-router-dom'],
+          'icons': ['lucide-react'],
+          'pdf': ['pdf-lib', 'pdfjs-dist'],
+          'ocr': ['tesseract.js']
+        },
+        assetFileNames: 'assets/[name].[hash][extname]'
       }
-    }
+    },
+    sourcemap: true,
+    target: 'es2020'
   }
 });

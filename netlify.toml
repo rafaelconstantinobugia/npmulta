@@ -19,3 +19,14 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  external_node_modules = ["pdf-lib", "tesseract.js"]
+
+[functions."kv-extract"]
+  included_files = ["dist/**"]
+
+[functions."ocr-paddle"]
+  included_files = ["dist/**"]
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--no-audit --no-fund"

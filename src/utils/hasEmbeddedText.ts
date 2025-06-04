@@ -1,7 +1,7 @@
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 
 // Set worker source for browser environments
-GlobalWorkerOptions.workerSrc = 'pdfjs-dist/build/pdf.worker.mjs';
+GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js';
 
 /**
  * Checks if a PDF has embedded text content exceeding the minimum character threshold
