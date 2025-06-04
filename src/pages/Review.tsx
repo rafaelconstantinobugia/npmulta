@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, FileText, CheckCircle, Send, Download, Eye, Mail } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { DadosMulta } from '../types/multa';
 import { generateLetter } from '../utils/generateLetter';
 import ProgressBar from '../components/ProgressBar';
+import CheckoutButton from '../components/ui/CheckoutButton';
 
 const Review: React.FC = () => {
   const location = useLocation();
@@ -21,9 +22,34 @@ const Review: React.FC = () => {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [paymentComplete, setPaymentComplete] = useState(false);
+
+  // Check if payment has been completed (from success page redirect)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const sessionId = searchParams.get('session_id');
+    
+    if (sessionId) {
+      // Verify payment server-side
+      const verifyPayment = async () => {
+        try {
+          const response = await fetch(`/.netlify/functions/verifyPayment?session_id=${sessionId}`);
+          const data = await response.json();
+          
+          if (response.ok && data.paid) {
+            setPaymentComplete(true);
+          }
+        } catch (error) {
+          console.error('Error verifying payment:', error);
+        }
+      };
+      
+      verifyPayment();
+    }
+  }, [location.search]);
 
   // Redirect to upload if no data is available
-  React.useEffect(() => {
+  useEffect(() => {
     if (!initialData) {
       navigate('/upload', { replace: true });
     }
@@ -247,6 +273,31 @@ const Review: React.FC = () => {
                   </p>
                 </div>
               </div>
+              
+              <div className="px-6 pb-6">
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 mb-4">
+                  <h3 className="font-medium text-slate-900 mb-2">Pagar para Obter a Carta</h3>
+                  <p className="text-slate-700 text-sm">
+                    Para gerar e descarregar a carta de contestação personalizada, é necessário efetuar o pagamento único de €9,90.
+                  </p>
+                </div>
+                
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+                    Email para receber confirmação
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="seu-email@exemplo.com"
+                  />
+                </div>
+                
+                <CheckoutButton email={email} disabled={!email} />
+              </div>
             </div>
           )}
           
@@ -341,7 +392,7 @@ const Review: React.FC = () => {
                 )}
               </div>
             </div>
-          ) : (
+          ) : paymentComplete ? (
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button
                 variant="primary"
@@ -370,7 +421,7 @@ const Review: React.FC = () => {
                 Voltar
               </Button>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
