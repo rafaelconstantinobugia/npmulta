@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  paddle:
+    build:
+      context: .
+      dockerfile: docker/PaddleOCR.Dockerfile
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+    volumes:
+      - paddle_cache:/root/.paddleocr
+    environment:
+      - CPU_NUM_THREADS=2
+
+volumes:
+  paddle_cache:
