@@ -1,6 +1,7 @@
 import * as Tesseract from 'tesseract.js';
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
+import type { TextItem } from 'pdfjs-dist/types/src/display/api';
 import { parseMulta } from './parseMulta';
 import { DadosMulta } from '../types/multa';
 
@@ -61,7 +62,7 @@ async function extractTextFromPdf(pdfFile: File): Promise<string> {
       
       // Extract text items
       const pageText = textContent.items
-        .map((item: any) => item.str)
+        .map((item: TextItem) => item.str)
         .join(' ');
       
       fullText += pageText + '\n\n';

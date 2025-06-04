@@ -41,13 +41,13 @@ export function parseMulta(text: string): Partial<DadosMulta> {
  */
 function extractMatricula(text: string): string | undefined {
   // Traditional format: 00-00-00, AA-00-00, 00-AA-00, 00-00-AA
-  const traditionalRegex = /\b([A-Z0-9]{2})[-]([A-Z0-9]{2})[-]([A-Z0-9]{2})\b/gi;
+  const traditionalRegex = /\b([A-Z0-9]{2})-([A-Z0-9]{2})-([A-Z0-9]{2})\b/gi;
   
   // New format: 00-AA-00
-  const newFormatRegex = /\b(\d{2})[-]([A-Z]{2})[-](\d{2})\b/gi;
+  const newFormatRegex = /\b(\d{2})-([A-Z]{2})-(\d{2})\b/gi;
   
   // Handle formats with spaces or dots instead of hyphens
-  const alternativeRegex = /\b([A-Z0-9]{2})[\s\.]([A-Z0-9]{2})[\s\.]([A-Z0-9]{2})\b/gi;
+  const alternativeRegex = /\b([A-Z0-9]{2})[\s.]([A-Z0-9]{2})[\s.]([A-Z0-9]{2})\b/gi;
   
   // Try all regex patterns
   const match = 
@@ -73,9 +73,9 @@ function extractMatricula(text: string): string | undefined {
       const segment = text.substring(keywordIndex, keywordIndex + 30);
       
       // Check for any pattern that looks like a license plate
-      const possiblePlate = segment.match(/\b[A-Z0-9]{2}[\s\.\-][A-Z0-9]{2}[\s\.\-][A-Z0-9]{2}\b/gi);
+      const possiblePlate = segment.match(/\b[A-Z0-9]{2}[\s.-][A-Z0-9]{2}[\s.-][A-Z0-9]{2}\b/gi);
       if (possiblePlate) {
-        return possiblePlate[0].replace(/[\s\.]/g, '-').toUpperCase();
+        return possiblePlate[0].replace(/[\s.]/g, '-').toUpperCase();
       }
     }
   }
@@ -89,9 +89,9 @@ function extractMatricula(text: string): string | undefined {
 function extractDate(text: string): string | undefined {
   // Common date formats in Portuguese documents: DD-MM-YYYY, DD/MM/YYYY
   const dateRegexes = [
-    /\b(\d{1,2})[-/\.](\d{1,2})[-/\.](\d{4})\b/g,        // DD-MM-YYYY, DD/MM/YYYY
-    /\b(\d{1,2})[-/\.](\d{1,2})[-/\.](\d{2})\b/g,         // DD-MM-YY, DD/MM/YY
-    /\b(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})\b/g,         // YYYY-MM-DD, YYYY/MM/DD
+    /\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/g,        // DD-MM-YYYY, DD/MM/YYYY
+    /\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{2})\b/g,         // DD-MM-YY, DD/MM/YY
+    /\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/g,         // YYYY-MM-DD, YYYY/MM/DD
   ];
   
   // Check for dates with month names
@@ -189,10 +189,10 @@ function extractDate(text: string): string | undefined {
 function extractTime(text: string): string | undefined {
   // Common time formats: HH:MM, HH.MM, HH,MM, HHhMM
   const timeRegexes = [
-    /\b(\d{1,2})[:\.h](\d{2})(?:\s*(?:horas?|h))?\b/gi,  // HH:MM, HH.MM, HHhMM (possibly with "horas" or "h")
-    /\b(\d{1,2})[,](\d{2})\b/gi,                         // HH,MM
+    /\b(\d{1,2})[:.h](\d{2})(?:\s*(?:horas?|h))?\b/gi,  // HH:MM, HH.MM, HHhMM (possibly with "horas" or "h")
+    /\b(\d{1,2}),(\d{2})\b/gi,                         // HH,MM
     /\b(\d{1,2})\s*horas\s*e\s*(\d{1,2})\s*minutos\b/gi, // X horas e Y minutos
-    /\b(\d{1,2})[:\.](\d{2})[:\.](\d{2})\b/gi,           // HH:MM:SS, HH.MM.SS (ignore seconds)
+    /\b(\d{1,2})[:.](\d{2})[:.](\d{2})\b/gi,           // HH:MM:SS, HH.MM.SS (ignore seconds)
   ];
   
   // Try all regex patterns
@@ -241,8 +241,8 @@ function extractTime(text: string): string | undefined {
 function extractLocation(text: string): string | undefined {
   // Location context patterns
   const locationPatterns = [
-    /(?:local|localidade|em|na|no|pela|artéria|arteria|via|estrada|rua|avenida|av\.)\s*[:]?\s*([\w\s,\.À-ÿ-]+?)(?:\.|$|\n|,\s*(?:em|no dia|pela|pelas))/i,
-    /(?:ocorrida|ocorrido|verificou-se)\s+(?:em|na|no)\s+([\w\s,\.À-ÿ-]+?)(?:\.|$|\n|,\s*(?:em|no dia|pela|pelas))/i,
+    /(?:local|localidade|em|na|no|pela|artéria|arteria|via|estrada|rua|avenida|av\.)\s*[:]?\s*([\w\s,.À-ÿ-]+?)(?:\.|$|\n|,\s*(?:em|no dia|pela|pelas))/i,
+    /(?:ocorrida|ocorrido|verificou-se)\s+(?:em|na|no)\s+([\w\s,.À-ÿ-]+?)(?:\.|$|\n|,\s*(?:em|no dia|pela|pelas))/i,
   ];
   
   // Road identifiers common in Portugal
@@ -257,7 +257,7 @@ function extractLocation(text: string): string | undefined {
     const context = text.substring(contextStart, contextEnd);
     
     // Extract meaningful location description
-    const locationPattern = /\b((?:A\d+|IP\d+|IC\d+|EN\d+|N\d+)(?:[\s,\.-]+[\w\s,\.À-ÿ-]+)?(?:km\s*\d+(?:[,.]\d+)?)?)\b/i;
+    const locationPattern = /\b((?:A\d+|IP\d+|IC\d+|EN\d+|N\d+)(?:[\s,.-]+[\w\s,.À-ÿ-]+)?(?:km\s*\d+(?:[,.]\d+)?)?)\b/i;
     const extendedMatch = context.match(locationPattern);
     
     if (extendedMatch) {
@@ -276,7 +276,7 @@ function extractLocation(text: string): string | undefined {
   }
   
   // Fallback: look for any address-like pattern
-  const addressPattern = /\b(?:rua|avenida|av\.|r\.|praça|praca|largo|travessa)\s+([\w\s,\.À-ÿ-]+?)(?:\,|\.|$|\n)/i;
+  const addressPattern = /\b(?:rua|avenida|av\.|r\.|praça|praca|largo|travessa)\s+([\w\s,.À-ÿ-]+?)(?:,|\.|$|\n)/i;
   const addressMatch = addressPattern.exec(text);
   
   if (addressMatch && addressMatch[1] && addressMatch[1].length > 3) {
@@ -325,8 +325,8 @@ function extractInfraction(text: string): string | undefined {
   
   // Look for infraction pattern from specific markers
   const infractionPatterns = [
-    /(?:contraordenação|contra-ordenação|contra ordenação|infração|infracao|coima)(?:[:]|\s+por|\s+de)?\s+([\w\s,\.À-ÿ-]+?)(?:\.|$|\n|,\s*(?:em|no dia|pela|pelas))/i,
-    /(?:artigo|art\.)\s+\d+[.\s,]*(?:n[.ºo]+\s+\d+)?[.\s,]*(?:do|da|código)\s+(?:da estrada|c\.e\.|ce)(?:\s+por|\s+relativa a)?\s+([\w\s,\.À-ÿ-]+?)(?:\.|$|\n|,\s*(?:em|no dia|pela|pelas))/i,
+    /(?:contraordenação|contra-ordenação|contra ordenação|infração|infracao|coima)(?:[:]|\s+por|\s+de)?\s+([\w\s,.À-ÿ-]+?)(?:\.|$|\n|,\s*(?:em|no dia|pela|pelas))/i,
+    /(?:artigo|art\.)\s+\d+[.\s,]*(?:n[.ºo]+\s+\d+)?[.\s,]*(?:do|da|código)\s+(?:da estrada|c\.e\.|ce)(?:\s+por|\s+relativa a)?\s+([\w\s,.À-ÿ-]+?)(?:\.|$|\n|,\s*(?:em|no dia|pela|pelas))/i,
   ];
   
   // Try specific patterns first
@@ -348,7 +348,7 @@ function extractInfraction(text: string): string | undefined {
       const context = lowerText.substring(contextStart, contextEnd);
       
       // Look for a more specific description
-      const detailPattern = new RegExp(`${keyword}\\s+(?:de|a)\\s+(\\d+[\\w\\s,\\.À-ÿ-]+?)(?:\\.|$|\\n)`, 'i');
+      const detailPattern = new RegExp(`${keyword}\\s+(?:de|a)\\s+(\\d+[\\w\\s,.À-ÿ-]+?)(?:\\.|$|\\n)`, 'i');
       const detailMatch = detailPattern.exec(context);
       
       if (detailMatch && detailMatch[1] && detailMatch[1].length > 1) {

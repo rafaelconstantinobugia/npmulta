@@ -4,21 +4,20 @@ import Button from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import ProgressBar from '../components/ProgressBar';
 import { extractTextFromFile, parseExtractedText } from '../utils/ocr';
-import { DadosMulta, OcrResult } from '../types/multa';
+import { DadosMulta } from '../types/multa';
+
+const ALLOWED_TYPES = ['.pdf', '.jpg', '.jpeg', '.png'];
+const MAX_SIZE_MB = 10;
+const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 const Upload: React.FC = () => {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [processingStage, setProcessingStage] = useState<string>('');
   const [extractedText, setExtractedText] = useState<string>('');
-
-  const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
-  const MAX_SIZE_MB = 10;
-  const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -30,11 +29,11 @@ const Upload: React.FC = () => {
     }
   }, []);
 
-  const validateFile = (file: File): boolean => {
+  const validateFile = useCallback((file: File): boolean => {
     // Check file extension
     const extension = '.' + file.name.split('.').pop()?.toLowerCase();
-    if (!allowedTypes.includes(extension)) {
-      setError(`Tipo de ficheiro não suportado. Por favor, use ${allowedTypes.join(', ')}.`);
+    if (!ALLOWED_TYPES.includes(extension)) {
+      setError(`Tipo de ficheiro não suportado. Por favor, use ${ALLOWED_TYPES.join(', ')}.`);
       return false;
     }
 
@@ -45,7 +44,48 @@ const Upload: React.FC = () => {
     }
 
     return true;
-  };
+  }, []);
+
+  const processFile = useCallback(async (file: File) => {
+    try {
+      setLoading(true);
+      setProcessingStage('Analisando o ficheiro...');
+
+      // Extract text from file using OCR
+      setProcessingStage('Extraindo texto...');
+      const text = await extractTextFromFile(file);
+      setExtractedText(text);
+
+      // Parse the extracted text to get structured data
+      setProcessingStage('Identificando dados...');
+      const parsedData = parseExtractedText(text);
+
+      // For the demo, we'll add a fake name since OCR might not extract it
+      const result: DadosMulta = {
+        nomeCondutor: "João Exemplo", // Default name since OCR might not extract it
+        matricula: parsedData.matricula || "00-AA-00",
+        data: parsedData.data || "01-01-2025",
+        hora: parsedData.hora || "14:32",
+        local: parsedData.local || "A1 km 145",
+        infracao: parsedData.infracao || "Excesso de velocidade"
+      };
+
+      setSuccess(true);
+      setLoading(false);
+
+      // Short delay for better UX, showing the success state before navigating
+      setTimeout(() => {
+        navigate('/review', { state: result });
+      }, 1500);
+    } catch (error) {
+      setLoading(false);
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Erro ao processar o ficheiro. Por favor, tente novamente.');
+      }
+    }
+  }, [navigate]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -60,50 +100,8 @@ const Upload: React.FC = () => {
       return;
     }
 
-    setFile(droppedFile);
     processFile(droppedFile);
-  }, []);
-
-  const processFile = async (file: File) => {
-    try {
-      setLoading(true);
-      setProcessingStage('Analisando o ficheiro...');
-      
-      // Extract text from file using OCR
-      setProcessingStage('Extraindo texto...');
-      const text = await extractTextFromFile(file);
-      setExtractedText(text);
-      
-      // Parse the extracted text to get structured data
-      setProcessingStage('Identificando dados...');
-      const parsedData = parseExtractedText(text);
-      
-      // For the demo, we'll add a fake name since OCR might not extract it
-      const result: DadosMulta = {
-        nomeCondutor: "João Exemplo", // Default name since OCR might not extract it
-        matricula: parsedData.matricula || "00-AA-00",
-        data: parsedData.data || "01-01-2025",
-        hora: parsedData.hora || "14:32",
-        local: parsedData.local || "A1 km 145",
-        infracao: parsedData.infracao || "Excesso de velocidade"
-      };
-      
-      setSuccess(true);
-      setLoading(false);
-      
-      // Short delay for better UX, showing the success state before navigating
-      setTimeout(() => {
-        navigate('/review', { state: result });
-      }, 1500);
-    } catch (error) {
-      setLoading(false);
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('Erro ao processar o ficheiro. Por favor, tente novamente.');
-      }
-    }
-  };
+  }, [processFile, validateFile]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -114,7 +112,6 @@ const Upload: React.FC = () => {
       return;
     }
 
-    setFile(selectedFile);
     processFile(selectedFile);
   };
 
