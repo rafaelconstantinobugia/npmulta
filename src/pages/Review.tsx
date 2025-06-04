@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, CheckCircle, Send, Download, Eye, Mail } from 'lucide-react';
+import { ArrowLeft, FileText, CheckCircle, Send, Download, Eye, Mail, Tag } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { DadosMulta } from '../types/multa';
 import { generateLetter } from '../utils/generateLetter';
@@ -24,6 +24,10 @@ const Review: React.FC = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
+  const [discountCode, setDiscountCode] = useState('');
+  const [discountApplied, setDiscountApplied] = useState(false);
+  const [discountError, setDiscountError] = useState<string | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0); // 0, 10, 20, or 100 percent
   
   const isFree = import.meta.env.VITE_FREE_MODE === 'true';
 
@@ -145,6 +149,47 @@ const Review: React.FC = () => {
       setEmailError('Ocorreu um erro ao enviar o email. Por favor, tente novamente.');
       setSendingEmail(false);
     }
+  };
+
+  const applyDiscount = () => {
+    if (!discountCode.trim()) {
+      setDiscountError('Por favor, insira um código de desconto válido.');
+      return;
+    }
+
+    // Normalize discount code (uppercase and trim)
+    const normalizedCode = discountCode.toUpperCase().trim();
+
+    // Check for valid discount codes
+    if (normalizedCode === 'PRIMEIRO10' || normalizedCode === 'WELCOME10' || normalizedCode === 'LANCAMENTO10' || normalizedCode === 'LANÇAMENTO10') {
+      setDiscountApplied(true);
+      setDiscountAmount(10);
+      setDiscountError(null);
+    } else if (normalizedCode === 'WELCOME20' || normalizedCode === 'ESTUDANTE20') {
+      setDiscountApplied(true);
+      setDiscountAmount(20);
+      setDiscountError(null);
+    } else if (normalizedCode === 'TEST100') {
+      setDiscountApplied(true);
+      setDiscountAmount(100);
+      setDiscountError(null);
+      setHasPaid(true); // With 100% discount, mark as paid
+    } else {
+      setDiscountError('Código de desconto inválido. Por favor, tente outro código.');
+    }
+  };
+
+  // Calculate the discounted price
+  const getPrice = () => {
+    const originalPrice = 990; // €9.90 in cents
+    if (discountAmount === 100) return 0;
+    return originalPrice - (originalPrice * discountAmount / 100);
+  };
+
+  // Format price for display (€9.90 or €0.00)
+  const getFormattedPrice = () => {
+    const priceInCents = getPrice();
+    return `€${(priceInCents / 100).toFixed(2).replace('.', ',')}`;
   };
 
   return (
@@ -281,7 +326,7 @@ const Review: React.FC = () => {
                 </div>
               </div>
               
-              {!isFree && (
+              {!isFree && !hasPaid && (
                 <div className="px-6 pb-6">
                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 mb-4">
                     <h3 className="font-medium text-slate-900 mb-2">Pagar para Obter a Carta</h3>
@@ -304,7 +349,72 @@ const Review: React.FC = () => {
                     />
                   </div>
                   
-                  <CheckoutButton email={email} disabled={!email} />
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-medium text-slate-700 flex items-center">
+                        <Tag className="w-4 h-4 mr-1" />
+                        Código de desconto
+                      </label>
+                      {discountApplied && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                          {discountAmount === 100 ? '100% desconto!' : `${discountAmount}% desconto`}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        className="flex-1 px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Código de desconto"
+                        value={discountCode}
+                        onChange={(e) => setDiscountCode(e.target.value)}
+                        disabled={discountApplied}
+                      />
+                      <button
+                        className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 transition-colors disabled:opacity-50"
+                        onClick={applyDiscount}
+                        disabled={discountApplied}
+                      >
+                        Aplicar
+                      </button>
+                    </div>
+                    {discountError && (
+                      <div className="mt-1 text-sm text-red-600">{discountError}</div>
+                    )}
+                    {discountApplied && (
+                      <div className="mt-1 text-sm text-green-600">
+                        {discountAmount === 100 ? 
+                          'Desconto de 100% aplicado! A carta será gratuita.' :
+                          `Desconto de ${discountAmount}% aplicado!`}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {discountAmount < 100 && (
+                    <div className="mt-6">
+                      <Button
+                        variant="primary"
+                        size="large"
+                        icon={<Mail className="w-5 h-5" />}
+                        onClick={() => {
+                          if (email) {
+                            localStorage.setItem('user_email', email);
+                            window.location.href = '/success';
+                          } else {
+                            alert('Por favor, insira um email válido para continuar.');
+                          }
+                        }}
+                        className="w-full"
+                        disabled={!email}
+                      >
+                        {`Pagar ${getFormattedPrice()} e obter carta`}
+                      </Button>
+                      
+                      <p className="mt-2 text-xs text-slate-500 text-center">
+                        Pagamento seguro processado por RevenueCat. As suas informações de pagamento nunca são armazenadas nos nossos servidores.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -401,7 +511,7 @@ const Review: React.FC = () => {
                 )}
               </div>
             </div>
-          ) : hasPaid || isFree ? (
+          ) : hasPaid || isFree || discountAmount === 100 ? (
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button
                 variant="primary"
@@ -417,7 +527,9 @@ const Review: React.FC = () => {
                     A Gerar Carta...
                   </>
                 ) : (
-                  isFree ? "Gerar Carta (Modo Teste)" : "Gerar Carta de Recurso"
+                  isFree ? "Gerar Carta (Modo Teste)" : 
+                  discountAmount === 100 ? "Gerar Carta (100% Desconto)" : 
+                  "Gerar Carta de Recurso"
                 )}
               </Button>
               
