@@ -30,7 +30,7 @@ export async function runKvExtractor(
   
   try {
     // Determine the extract API URL
-    const apiUrl = import.meta.env.VITE_KV_EXTRACT_URL || '/.netlify/functions/kv-extract';
+    const apiUrl = import.meta.env.VITE_KV_EXTRACT_URL || 'https://' + window.location.host + '/.netlify/functions/kv-extract';
     
     let response: Response;
     

@@ -26,7 +26,7 @@ export async function runPaddleOCR(
   { signal }: { signal?: AbortSignal } = {}
 ): Promise<PaddleOcrResponse> {
   // Use environment variable or default to localhost during development
-  const paddleOcrUrl = import.meta.env.VITE_PADDLE_OCR_URL || '/.netlify/functions/ocr-paddle';
+  const paddleOcrUrl = import.meta.env.VITE_PADDLE_OCR_URL || 'https://' + window.location.host + '/.netlify/functions/ocr-paddle';
   
   // Create an AbortController that will timeout after 10 seconds
   const timeoutController = new AbortController();
